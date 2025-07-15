@@ -1,13 +1,20 @@
 #pragma once
-#include <filesystem>
-#include "fs_visitor.h"
+#include <deque>
+#include <unordered_set>
+#include "file_system_search.h"
+#include "pe_binary.h"
 
-class Walker {
-public:
-    Walker(const std::filesystem::path& path);
-    void walk(const FileSystemVisitor& visitor) const;
+class DependencyWalker {
+    std::unordered_set<std::string> _resolved;
+    std::deque<std::string> _unresolved;
+    FileSystemSearch _searcher;
 
+   public:
+    DependencyWalker(FileSystemSearch searcher, const PeBinary& root);
 
-private:
-    std::filesystem::path _path;
+    bool hasUnresolved() const { return !_unresolved.empty(); }
+    std::deque<PeBinary> resolveNext();
+
+    const auto& resolvedDeps() const { return _resolved; }
+    const auto& unresolvedDeps() const { return _unresolved; }
 };

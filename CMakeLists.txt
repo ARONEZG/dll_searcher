@@ -4,23 +4,22 @@ project(dll_searcher LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Альтернативный способ добавления модуля
-add_library(libpe 
+add_library(libpe STATIC
+    libpe/libpe/libpe.ixx
+)
+target_sources(libpe
+  PUBLIC
+    FILE_SET all_my_modules TYPE CXX_MODULES FILES
     libpe/libpe/libpe.ixx
 )
 
-# Указываем, что это модуль
-set_target_properties(libpe PROPERTIES
-    CXX_SCAN_FOR_MODULES ON
-)
-
-# Добавляем директорию для поиска модулей
 target_include_directories(libpe PUBLIC libpe/libpe)
 
-add_executable(dll_searcher main.cpp)
+add_executable(dll_searcher main.cpp directory.h directory.cpp import_table.h import_table.cpp)
 target_link_libraries(dll_searcher PRIVATE libpe)
 
-# Для Visual Studio - дополнительные флаги
+
+
 if(MSVC)
     target_compile_options(libpe PRIVATE /std:c++latest)
     target_compile_options(dll_searcher PRIVATE /std:c++latest)

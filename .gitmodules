@@ -1,0 +1,3 @@
+[submodule "libpe"]
+	path = libpe
+	url = https://github.com/jovibor/libpe.git

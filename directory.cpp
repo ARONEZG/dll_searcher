@@ -1,54 +1,48 @@
 #include "directory.h"
 #include <stdexcept>
 
-
-Directory::Directory(const std::filesystem::path& path) : _path(std::filesystem::canonical(path)) {
+Directory::Directory(const std::filesystem::path& path)
+    : _path(std::filesystem::canonical(path)) {
     if (!std::filesystem::exists(_path)) {
         throw std::invalid_argument("Path does not exist!");
     }
 
     if (!std::filesystem::is_directory(_path)) {
-        throw std::invalid_argument("Path " + _path.string() + " not directory");
+        throw std::invalid_argument("Path " + _path.string() +
+                                    " not directory");
     }
 }
 
-// std::filesystem::path root() const {
-
-// }
-
 Directory::BfsIterator::BfsIterator(const std::filesystem::path& path) {
     if (std::filesystem::is_directory(path)) {
-        for (const auto& p : std::filesystem::directory_iterator(path)) {
-            _current_level.push_back(p);
-        }
+        _dirs_queue.push_back(path);
     }
 }
 
 Directory::BfsIterator::reference Directory::BfsIterator::operator*() const {
-    return _current_level;
+    return _dirs_queue.front();
 }
 
-
 Directory::BfsIterator::pointer Directory::BfsIterator::operator->() const {
-    return &_current_level;
+    return &_dirs_queue.front();
 }
 
 Directory::BfsIterator& Directory::BfsIterator::operator++() {
-    if (_current_level.empty()) {
+    if (_dirs_queue.empty()) {
         return *this;
     }
-    auto old_level = std::move(_current_level);
 
-    for (const auto& dir : old_level) {
-        std::error_code ec;
-        auto dir_iter = std::filesystem::directory_iterator(dir, ec);
-        for (auto path : std::filesystem::directory_iterator(dir)) {
-            if (ec) {
-                break;
-            }
-            if (std::filesystem::is_directory(path)) {
-                _current_level.emplace_back(std::move(path));
-            }
+    auto current = _dirs_queue.front();
+    _dirs_queue.pop_front();
+
+    std::error_code ec;
+    auto dir_iter = std::filesystem::directory_iterator(current, ec);
+    for (const auto& path : std::filesystem::directory_iterator(current)) {
+        if (ec) {
+            break;
+        }
+        if (std::filesystem::is_directory(path)) {
+            _dirs_queue.emplace_back(std::move(path));
         }
     }
 
@@ -62,7 +56,7 @@ Directory::BfsIterator Directory::BfsIterator::operator++(int) {
 }
 
 bool Directory::BfsIterator::operator==(const BfsIterator& other) const {
-    return _current_level.empty() && other._current_level.empty();
+    return _dirs_queue.empty() && other._dirs_queue.empty();
 }
 
 bool Directory::BfsIterator::operator!=(const BfsIterator& other) const {

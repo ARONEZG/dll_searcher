@@ -18,8 +18,8 @@ public:
         using iterator_category = std::input_iterator_tag;
         using value_type = std::filesystem::path;
         using difference_type = std::ptrdiff_t;
-        using pointer = const std::deque<value_type>*;
-        using reference = const std::deque<value_type>&;
+        using pointer = const value_type*;
+        using reference = const value_type&;
 
         BfsIterator() = default;
 
@@ -38,7 +38,7 @@ public:
         bool operator!=(const BfsIterator& other) const;
 
     private:
-        std::deque<value_type> _current_level;
+        std::deque<value_type> _dirs_queue;
     };
 
     BfsIterator begin() const;
