@@ -3,10 +3,12 @@
 #include <filesystem>
 
 class FileSystemSearch {
-    std::filesystem::path _root;
-
    public:
     explicit FileSystemSearch(std::filesystem::path root);
 
-    std::deque<std::filesystem::path> findFile(const std::string& filename) const;
+    std::optional<std::filesystem::path> findFile(const std::string& filename) const;
+    const std::filesystem::path& root() const { return _root; }
+
+private:
+    std::filesystem::path _root;
 };

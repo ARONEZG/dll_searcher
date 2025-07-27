@@ -1,4 +1,4 @@
-#include "dependency_walker.h"
+#include "walker.h"
 
 DependencyWalker::DependencyWalker(FileSystemSearch searcher, const PeBinary& root)
     : _searcher(std::move(searcher)) {
@@ -6,28 +6,31 @@ DependencyWalker::DependencyWalker(FileSystemSearch searcher, const PeBinary& ro
     auto missing = root.findMissingDependencies(root.path().parent_path());
     _unresolved.assign(missing.begin(), missing.end());
 }
+std::optional<PeBinary> DependencyWalker::resolveNext(const std::filesystem::path& target_dir) {
+    if (_unresolved.empty()) {
+        return {};
+    }
 
-std::deque<PeBinary> DependencyWalker::resolveNext() {
-    if (!hasUnresolved()) return {};
-
-    std::deque<PeBinary> resolvedBinaries;
-    auto currentDep = _unresolved.front();
+    std::deque<PeBinary> resolved_bin;
+    auto current = _unresolved.front();
     _unresolved.pop_front();
 
-    auto foundFiles = _searcher.findFile(currentDep);
-    for (const auto& foundPath : foundFiles) {
-        PeBinary binary(foundPath);
-        _resolved.insert(currentDep);
-        resolvedBinaries.push_back(binary);
+    auto founded = _searcher.findFile(current);
 
-        // Добавляем новые зависимости
-        auto newDeps = binary.findMissingDependencies(_searcher.root());
-        for (const auto& dep : newDeps) {
+    if (!founded) {
+        _future_unresolved.push_back(current);
+        return std::nullopt;
+    }
+        PeBinary binary(founded.value());
+        _resolved.insert(current);
+        resolved_bin.push_back(binary);
+
+        auto deps = binary.findMissingDependencies(target_dir);
+        for (const auto& dep : deps) {
             if (_resolved.find(dep) == _resolved.end()) {
                 _unresolved.push_back(dep);
             }
         }
-    }
 
-    return resolvedBinaries;
+    return binary;
 }

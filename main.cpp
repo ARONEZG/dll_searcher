@@ -16,7 +16,8 @@ import libpe;
 #endif
 
 #include "directory.h"
-#include "import_table.h"
+#include "pebinary.h"
+#include "walker.h"
 
 void PrintAllDependencies(const std::filesystem::path& filePath) {
     try {
@@ -71,42 +72,18 @@ int main(int argc, char* argv[]) {
 
     std::filesystem::path search_dir = "\\search_dir";
     std::filesystem::path target_path = "\\target_path";
-    auto target_dir = target_path.root_directory();
-    ImportTable table(target_path);
+    
+    auto walker = DependencyWalker(
+        FileSystemSearch(search_dir),
+        PeBinary(target_path));
 
-    auto dependencies = table.unresoleved(target_dir);
-    std::queue<std::filesystem::path> missing_dependencies;
-
-    while (!dependencies.empty()) {
-        auto current = dependencies.front();
-        dependencies.pop_front();
-        Directory dir(search_dir);
-        for (const auto& current_dir : dir) {
-            auto path = current_dir;
-            path.append(current);
-
-            if (std::filesystem::exists(path) &&
-                std::filesystem::is_regular_file(path)) {
-                // copyTo(path, dst);
-
-                auto unresolved = ImportTable(path).unresoleved(target_dir);
-
-                for (const auto& dependency : unresolved) {
-                    dependencies.push_back(dependency);
-                }
-            }
+    while (walker.hasUnresolved()) {
+        auto resolved = walker.resolveNext(target_path);
+        if (resolved) {
+            PrintAllDependencies(resolved->path());
         }
     }
 
-    try {
-        // Преобразуем char* -> wstring с проверкой ошибок
-        auto exe_path = std::filesystem::path(argv[0]);
-
-        PrintAllDependencies(exe_path);
-    } catch (const std::exception& e) {
-        std::cerr << "Conversion error: " << e.what() << "\n";
-        return 1;
-    }
-
-    return 0;
+    walker.resolvedDeps();
+    walker.unresolvedDeps();
 }

@@ -15,7 +15,7 @@ target_sources(libpe
 
 target_include_directories(libpe PUBLIC libpe/libpe)
 
-add_executable(dll_searcher main.cpp directory.h directory.cpp import_table.h import_table.cpp)
+add_executable(dll_searcher main.cpp directory.h directory.cpp walker.h walker.cpp pebinary.h pebinary.cpp filesystem_search.h filesystem_search.cpp)
 target_link_libraries(dll_searcher PRIVATE libpe)
 
 
