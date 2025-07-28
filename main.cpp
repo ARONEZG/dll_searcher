@@ -79,11 +79,19 @@ int main(int argc, char* argv[]) {
 
     while (walker.hasUnresolved()) {
         auto resolved = walker.resolveNext(target_path);
-        if (resolved) {
-            PrintAllDependencies(resolved->path());
-        }
     }
 
-    walker.resolvedDeps();
-    walker.unresolvedDeps();
+    auto resolved = walker.resolvedDeps();
+    auto unresolved = walker.unresolvedDeps();
+
+    std::cout << "Resolved: " << "\n";
+    for (const auto& dep : resolved) {
+        std::cout << dep << std::endl;
+    }
+
+    std::cout << "Unresolved: " << "\n";
+
+    for (const auto& dep : unresolved) {
+        std::cout << dep << std::endl;
+    }
 }

@@ -29,3 +29,7 @@ std::deque<std::string> PeBinary::findMissingDependencies(
     }
     return missing;
 }
+
+const std::filesystem::path& PeBinary::path() const {
+    return _path;
+}
