@@ -26,3 +26,10 @@ if(MSVC)
     target_compile_options(libpe PRIVATE /std:c++latest)
     target_compile_options(dll_searcher PRIVATE /std:c++latest)
 endif()
+
+
+option(BUILD_TESTS "Build unit tests" ON)
+
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
